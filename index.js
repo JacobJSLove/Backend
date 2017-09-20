@@ -19,7 +19,7 @@ const options = {
   }
 };
 const contacts = [];  
-
+const citys = [];  
 server.connection({  
     host: 'localhost',
     port: 3000
@@ -50,9 +50,68 @@ server.route({
     description: 'Show contacts',
     notes: 'Returns list of  contacts'},
   	handler(request, reply) {
+    directory: {
+            path: 'public'
+        }
     reply({
       contacts
     });
+  }
+});
+server.route({  
+  method: 'GET',
+  path: '/citys',
+  config: {
+    tags: ['api'],
+    description: 'Show citys',
+    notes: 'Returns list of  citys'},
+    handler(request, reply) {
+    directory: {
+            path: 'public'
+        }
+    reply({
+      citys
+    });
+  }
+});
+server.route({
+    method: 'GET',
+    path: '/city/{id}',
+ config: {
+      handler: function(req, reply){
+                    if(citys.length <= req.params.id){
+                        return reply({message:"product does not exists", responseCode: 1}).code(404);
+                    }
+                                        reply({'citys':citys[req.params.id], 'responseCode':0});
+                                  
+ }
+ }
+});
+server.route({  
+  method: 'POST',
+  path: '/citys',
+  config: {
+    tags: ['api'],
+    description: 'Add city',
+    validate: {
+      payload: Joi.object({
+        city: Joi.object({
+          id: Joi.number().integer().required(),
+          name: Joi.string().required(),
+          zipcode: Joi.string().required(),
+          limit: Joi.string().required()
+        }).required()
+      })
+    }
+  },
+  handler(request, reply){
+  const city = request.payload.city;
+    const cityExists = citys.find(c => c.id === city.id && c.name === city.name);
+  if (cityExists) {
+    return reply('This city exists!').code(409);
+  }
+    citys.push(city);
+    reply({city}).code(201);
   }
 });
 server.route({  
